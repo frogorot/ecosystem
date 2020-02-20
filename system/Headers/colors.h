@@ -13,5 +13,12 @@ static GLfloat green[] = {0.0,1.0,0.0};
 static GLfloat white[] = {1.0,1.0,1.0};
 static GLfloat lgrey[] = {0.7,0.7,0.7};
 static GLfloat dgrey[] = {0.3,0.3,0.3};
-
+static GLfloat col[8][3] = {{2.0, 0.0, 2.0},
+						 {7.0, 0.0, 7.0},
+						 {1.0, 0.0, 0.0},
+						 {7.0, 0.0, 0.0},
+						 {0.0, 1.0, 0.0},
+						 {0.0, 7.0, 0.0},
+						 {0.0, 1.0, 1.0},
+						 {0.0, 7.0, 7.0}};
 #endif

@@ -3,6 +3,8 @@
 #include"../Headers/map.h"
 #include"../Headers/fancs.h"
 #include"../Headers/colors.h"
+
+
 //Particle
 Particle::Particle():
 	volume(1),
@@ -154,7 +156,8 @@ Substratum::Substratum():
 	fo(solute),
 	regen(false),
 	keep(0.0),
-	volume_reg(0.0)
+	volume_reg(0.0),
+	num_bug(0)
 { 
 	setVol(0.0); 
 	setHeigh(0.0); 
@@ -164,7 +167,8 @@ Substratum::Substratum(double vo1, food fo1, float he1,Vector pos1,bool reg1, fl
 	fo(fo1),
 	regen(reg1),
 	keep(keep1),
-	volume_reg(vol_reg1)
+	volume_reg(vol_reg1),
+	num_bug(0)
 { 
 	setVol(vo1); 
 	setHeigh(he1); 
@@ -174,7 +178,8 @@ Substratum::Substratum(const Substratum* sub):
 	fo(sub->getFood()),
 	regen(sub->getRegen()),
 	keep(sub->getKeep()),
-	volume_reg(sub->getVol_reg())
+	volume_reg(sub->getVol_reg()),
+	num_bug(sub->getNumBug())
 {	
 	setVol(sub->getVol()); 
 	setHeigh(sub->getHeigh()); 
@@ -188,6 +193,7 @@ Substratum& Substratum::operator=(const Substratum* sub){
 	setKeep(sub->getKeep());
 	setFood(sub->getFood());
 	setVol_reg(sub->getVol_reg());
+	SetNumBug(sub->getNumBug());
 
 	return *this;
 }
@@ -196,11 +202,9 @@ void Substratum::drowSub(){
 	if(fo == solute){
 		if(keep<EPS)
 			glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,blue);
-		if(keep>=EPS && keep<1200.0)
+		else if(keep== Stock )
 			glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,yellow);
-		if(keep>=1200.0 && keep<3000.0)
-			glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,brown);
-		if(keep>=3000.0)
+		else
 			glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,grey);
 	}
 	if(fo == meat){
@@ -214,7 +218,25 @@ void Substratum::drowSub(){
 		glVertex2d(1,1);
 		glVertex2d(1,0);
 	glEnd();
-
+	/*if(num_bug >0){
+		/*GLfloat col[3];
+		col[0] = num_bug*0.75;
+		col[1] =8/num_bug;
+		col[2] = 0.6;*/
+		/*if(num_bug < 8)
+			glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,col[num_bug]);
+		else
+			glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,black);
+	}*/
+	glPushMatrix();
+	glTranslated(0.15,0.15,0.2);
+	glBegin(GL_QUADS);
+		glVertex2d(0,0);
+		glVertex2d(0,0.7);
+		glVertex2d(0.7,0.7);
+		glVertex2d(0.7,0);
+	glEnd();
+	glPopMatrix();
 	glLineWidth(2);
 
 	glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT,black);
@@ -365,10 +387,10 @@ void Map::genMap(int N, double vol, float p, const char* fail)// ошибка в переда
 		{
 			for(int e = 0;e<N;e++)
 			{
-				if( N*0.25<i && i<N*0.75 && N*0.25<e && e<N*0.75)
-					h = 550;//(PerlinNoise(x+i,y+e,p,3)-0.1)*500;//(PerlinNoise(x+i,y+e,p,3)+ 0.2)*20;
-				else
-					h = 0;
+				//if( N*0.25<i && i<N*0.75 && N*0.25<e && e<N*0.75)
+					h = Stock;//(PerlinNoise(x+i,y+e,p,3)-0.1)*500;//(PerlinNoise(x+i,y+e,p,3)+ 0.2)*20;
+				//else
+					//h = 0;
 				if(h<=0)
 				{
 					poin = Point(vol,vater,h,Vector(i,e));

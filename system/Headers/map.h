@@ -12,6 +12,7 @@ using namespace std;
 const double VOLUM = 4.0;
 const double EPS = 0.0001;
 
+const double Stock = 6;
 enum type	// тип поверхности
 {
 	ground = 1,
@@ -69,6 +70,7 @@ private:
 	bool regen;
 	float keep; // нынешняя питательность (кол-во энергии)
 	float volume_reg;
+	int num_bug;
 public:
 	Substratum();
 	Substratum(double,food,float,Vector,bool,float,float);
@@ -79,12 +81,16 @@ public:
 	inline const float getKeep()const {return keep;}
 	inline const float getVol_reg()const {return volume_reg;}
 	inline const bool getRegen()const {return regen;}
+	inline const int getNumBug()const {return num_bug;}
 	const food getFood()const{ return fo;}
 
 	inline void setKeep(float ke) {keep = ke;}
 	inline void setVol_reg(float vol_r) {volume_reg = vol_r;}
 	inline void setRegen(bool re) {regen = re;}
 	void setFood(food f){ fo = f;}
+	inline void addBug() { ++num_bug; }
+	inline void eraseBug() { --num_bug; }
+	inline void SetNumBug(const int n) { num_bug = n;} 
 
 	void drowSub();
 
