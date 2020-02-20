@@ -10,9 +10,15 @@ using namespace std;
 #define __MAP_H
 
 const double VOLUM = 4.0;
-const double EPS = 0.0001;
+const double EPS = 0.001;
 
-const double Stock = 6.5; 
+const double Stock = 0.0; // const double
+/*
+3/k+3k+5
+
+k = 5 => 20.6
+k=8   => 29.375
+*/
 enum type	// тип поверхности
 {
 	ground = 1,
@@ -59,7 +65,7 @@ public:
 	inline const type getType()const { return ty; }
 	void Drowpoint();
 	void writePoint(FILE*);
-	void writePoint_wthisout_vol(FILE*);
+	void writePoint_whisout_vol(FILE*);
 	void writePoint_vol(FILE*);
 };
 
@@ -117,6 +123,7 @@ public:
 	void drawMap(Vector centre); // отрисовка карты
 	void writeMap(vector <Point>,const char*);
 	void genMap(int N, double vol, float p, const char* fail);
+	void genMapTEST(int k, double vol, float p, const char* file);
 	void regSub(float dt);
 
 	inline const vector <Point>& getPoin()const {return po;}
