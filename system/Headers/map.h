@@ -12,7 +12,7 @@ using namespace std;
 const double VOLUM = 4.0;
 const double EPS = 0.0001;
 
-const double Stock = 6;
+const double Stock = 6.5; 
 enum type	// тип поверхности
 {
 	ground = 1,

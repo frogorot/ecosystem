@@ -98,8 +98,10 @@ void Animal::drowAnimal(Vector centre){
 void Animal::new_maj(deque <Animal>& anim, const Map& map)
 {
     if(energy < en_div){
-		if(map.getSub((int)(position.GetX())*map.getDemen() + (int)(position.GetY()))->getKeep()>0)
-			targ = eat;
+		if(map.getSub((int)(position.GetX())*map.getDemen() + (int)(position.GetY()))->getKeep()>0 && 
+			map.getSub((int)(position.GetX())*map.getDemen() + (int)(position.GetY()))->getKeep() == 
+			map.getSub((int)(position.GetX())*map.getDemen() + (int)(position.GetY()))->getHeigh())
+				targ = eat;
 		else{
 			int pos = (int)(position.GetX())*map.getDemen() + (int)(position.GetY());
 			int x = (int)direction.GetX();
@@ -107,17 +109,17 @@ void Animal::new_maj(deque <Animal>& anim, const Map& map)
 			if(map.getSub(pos + x *map.getDemen() + y)->getKeep()>0){
 				targ = motion;
 			}
-			else if(map.getSub(pos - x *map.getDemen() + y)->getKeep()>0){// left side
+			else if(map.getSub(pos - y *map.getDemen() + x)->getKeep()>0){// left side
 				targ = motion;
 				direction = Vector(-y, x);
 			}
-			else if(map.getSub(pos + x *map.getDemen() - y)->getKeep()>0){// right side
+			else if(map.getSub(pos + y *map.getDemen() - x)->getKeep()>0){// right side
 				targ = motion;
 				direction = Vector(y, -x);
 			}
 			else if(map.getSub(pos - x *map.getDemen() - y)->getKeep()>0){// back side
 				targ = motion;
-				direction = Vector(-y, -x);
+				direction = Vector(-x, -y);
 			}
 			else
 				targ = motion; // find or not  bug go through
@@ -135,7 +137,6 @@ void Animal::move(double dt, Map& map){ // т.к. считаем dt в ms
 
 	targ = Null;
 }
-
 void Animal::eating(double dt,Map& map){
 	Substratum* sub = map.getSub((int)(position.GetX())*map.getDemen() + (int)(position.GetY()));
 	if(sub->getKeep() > 0)
@@ -143,7 +144,6 @@ void Animal::eating(double dt,Map& map){
 
 	targ  = Null;
 }
-
 void Animal::devide(Map& map, deque <Animal>& anim){
 	targ = Null;
 	if(energy >= en_div){

@@ -11,12 +11,15 @@
 
 using namespace std;
 
-int SCENE_W = 968;
-int SCENE_H = 968;
+int SCENE_W = 700;//968;
+int SCENE_H = 700;//968;
 
 Map* map1 = NULL;
 deque <Animal> animal;
-vector <Animal> species;
+deque <int> hand_eat;
+deque <int> hand_other;
+
+/*vector <Animal> species;
 vector <int> population;
 vector <Vector> gender;
 vector <int> immature;
@@ -25,7 +28,7 @@ vector <int> adult;
 vector <int> aged;
 
 vector <int> old;
-vector <int> hunger;
+vector <int> hunger;*/
 
 
 //vector <int[4]> age; // видимо, так делать нельзя
@@ -131,20 +134,72 @@ void idle()
 		if((dt - drowdt > 15)){
 			//int tim = dt - drowdt;
 			total_calcdt += calcdt;
-			int siz = animal.size();
-			for(unsigned int i =0; i<siz; i++){
-				bool die = animal[i].live(*map1,animal,calcdt, total_calcdt,i);
-				cout << animal[i].getEnergy() << "\n";
+			int siz_eat = hand_eat.size();
+			int siz_oth = hand_other.size();
+			bool die;
+			for(unsigned int i =0; i<siz_eat; i++){
+				die = animal[hand_eat[i]].live(*map1,animal,calcdt, total_calcdt,i);
+				cout << animal[hand_eat[i]].getEnergy() << "\n";
 				if(die){
-					//map1->getSub((int)(animal[i].position.GetX())*map1->getDemen() + (int)(animal[i].position.GetY()))->eraseBug();
-					animal.erase(animal.begin() + i);
-					--i;
-					--siz;
+					map1->getSub((int)(animal[hand_eat[i]].position.GetX())*map1->getDemen() + (int)(animal[hand_eat[i]].position.GetY()))->eraseBug();
+					animal.erase(animal.begin() + hand_eat[i]);
+
+					int de = hand_eat[i];
+					double siz = hand_other.size();
+					for(int j =0;j<siz;j++)
+						if(hand_other[j] > de)
+							--hand_other[j];
+					siz = hand_eat.size();
+					for(int j =0;j<siz;j++)
+						if(hand_eat[j] > de)
+							--hand_eat[j];
+				}
+				else{
+					if(animal[hand_eat[i]].targ == eat)
+						hand_eat.push_back(hand_eat[i]);
+					else
+						hand_other.push_back(hand_eat[i]);
 				}
 			}
+			hand_eat.erase(hand_eat.begin(), hand_eat.begin()+siz_eat);
+			for(unsigned int i =0; i<siz_oth; i++){
+				if(animal[hand_other[i]].targ == reprod){
+					die = animal[hand_other[i]].live(*map1,animal,calcdt, total_calcdt,i);
+					if(animal.back().targ == eat)
+						hand_eat.push_back(animal.size()-1);
+					else
+						hand_other.push_back(animal.size()-1);
+				}
+				else
+					die = animal[hand_other[i]].live(*map1,animal,calcdt, total_calcdt,i);
+				
+				cout << animal[hand_other[i]].getEnergy() << "\n";
+				if(die){
+					map1->getSub((int)(animal[hand_other[i]].position.GetX())*map1->getDemen() + (int)(animal[hand_other[i]].position.GetY()))->eraseBug();
+					animal.erase(animal.begin() + hand_other[i]);
+
+					int de = hand_other[i];
+					double siz = hand_other.size();
+					for(int j =0;j<siz;j++)
+						if(hand_other[j] > de)
+							--hand_other[j];
+					siz = hand_eat.size();
+					for(int j =0;j<siz;j++)
+						if(hand_eat[j] > de)
+							--hand_eat[j];
+				}
+				else{
+					if(animal[hand_other[i]].targ == eat)
+						hand_eat.push_back(hand_other[i]);
+					else
+						hand_other.push_back(hand_other[i]);
+				}
+			}
+			hand_other.erase(hand_other.begin(), hand_other.begin()+siz_oth);
 			cout << "______" << "\n";
 		}
 		stop = !stop;
+		cout << animal.size() << "\n";
 		fputs(myto_string((int)animal.size()).c_str(), F_popul);
 		fputs("\n",F_popul);
 		fclose(F_popul);
@@ -292,7 +347,12 @@ int main(int argc, char** argv)
 	//map1->readMap("test11.txt"); // "test.txt"
 	int demen = map1->getDemen();
 	//for(int i =0;i<4;i++){
-		animal.push_back(Bug1(100,100,0));;//Vector(chance(demen-1), chance(demen-1))
+		animal.push_back(Bug1(100,100,0));//Vector(chance(demen-1), chance(demen-1))
+		animal.back().new_maj(animal, *map1);
+		if(animal.back().targ == eat)
+			hand_eat.push_back(animal.size()-1);
+		else
+			hand_other.push_back(animal.size()-1);
 		//animal.push_back(Bug1(25,23,1));
 		//animal.push_back(Bug1(23,25,3));
 		//animal.push_back(Bug1(25,25,2));
@@ -341,8 +401,24 @@ Animal Bug1(int x, int y, int d){
 	cin >> for_li;
 	cout << "Write diverge limit: ";
 	cin >> di;*/
-	return Animal(2.1, 2.7, 0.5, 10.3, color, Vector(x, y), dir); //Animal(en, ki, for_li, di, color, Vector(x, y), dir); 
-		//Animal(2.0, 2.8, 0.5, 8.55, color, Vector(x, y), dir); 
+	return Animal(0, 3.0, 1.0, 9.5, color, Vector(x, y), dir); 
+		//Animal(0, 2.0, 2.0, 27.0, color, Vector(x, y), dir); // 11
+		//Animal(0, 0.6, 0.5, 10, color, Vector(x, y), dir); //4
+		//Animal(3.0,3.0,1.0,8.0, color, Vector(x, y), dir); //14
+		//Animal(1.0,3.0,1.0,11.0, color, Vector(x, y), dir); //12
+		//Animal(1.0,8.0,4.0,60.0, color, Vector(x, y), dir); //37
+		//Animal(1.0,8.0,4.0,60.0, color, Vector(x, y), dir); //37
+		//Animal(1.0,3.0,1.0,9.0, color, Vector(x, y), dir); //5.5 при каком-то S порождает выживание первого жука, хотя D/2<V+2L
+		//Animal(1.0,3.0,1.0,11.0, color, Vector(x, y), dir); //12 // забавный старт, потом опять квадраты
+		//Animal(1.0, 2.0, 1.0, 11, color, Vector(x, y), dir); //6
+		//Animal(2.1, 2.7, 0.5, 10.4, color, Vector(x, y), dir); //6
+		 //Animal(3.0, 2.0, 1.0, 18.0, color, Vector(x, y), dir); //6
+		//Animal(2.0, 1.0, 0.35, 12.1, color, Vector(x, y), dir); 6
+		//Animal(1.5, 1.0, 0.5, 6.5, color, Vector(x, y), dir); 5
+		//Animal(1.0, 1.0, 1.4, 7, color, Vector(x, y), dir); 4
+		//Animal(2.0, 1.0, 0.35, 12.1, color, Vector(x, y), dir); 6
+		//Animal(2.1, 2.7, 0.5, 10.3, color, Vector(x, y), dir); 6//Animal(en, ki, for_li, di, color, Vector(x, y), dir); 
+		//Animal(2.0, 2.8, 0.5, 8.55, color, Vector(x, y), dir); 6
 
 
 		//Animal(1.0, 1.0, 1.6, 4.0, color, Vector(x, y), dir); 
