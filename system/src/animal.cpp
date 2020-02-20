@@ -27,18 +27,18 @@ Animal::Animal():
 	kinetic_energy(0),
 	for_live(0),
 	en_div(0),
-	//age(0),
-	position(iVector(0,0)),
-	direction(iVector(0,0)),
+	age(0),
+	position(Vector(0,0)),
+	direction(Vector(0,0)),
 	targ(Null)
 {an_color[0] = 0.0; an_color[1] = 0.0; an_color[2] = 0.0;}
-Animal::Animal(double en, double ki_en, double for_li, double en_d, GLfloat color[3], iVector pos, iVector dir):
+Animal::Animal(double en, double ki_en, double for_li, double en_d, GLfloat color[3], Vector pos, Vector dir):
 	prev_dt(0),
 	energy (en),
 	kinetic_energy(ki_en),
 	for_live(for_li),
 	en_div(en_d),
-	//age(0),
+	age(0),
 	position(pos),
 	direction(dir),
 	targ(Null)
@@ -48,10 +48,10 @@ Animal::Animal(const Animal& anim):
 	kinetic_energy(anim.getKinEn()),
 	for_live(anim.getForLive()),
 	en_div(anim.getEnDiv()),
-	//prev_dt(anim.getDt()),
+	prev_dt(anim.getDt()),
 	position(anim.position),
 	direction(anim.direction),
-	//age(anim.age),
+	age(anim.age),
 	targ(anim.targ)
 {
 	an_color[0] = anim.an_color[0];
@@ -64,8 +64,8 @@ Animal& Animal::operator= (const Animal& val)
 	kinetic_energy = val.getKinEn();
 	for_live = val.getForLive();
 	en_div = val.getEnDiv();
-	//prev_dt = val.getDt();
-	//age = val.age;
+	prev_dt = val.getDt();
+	age = val.age;
 	position = val.position;
 	direction = val.direction;
 	targ = val.targ;
@@ -97,97 +97,80 @@ void Animal::drowAnimal(Vector centre){
 }
 void Animal::new_maj(deque <Animal>& anim, const Map& map)
 {
-	if(energy < -EPS)
-		targ = death;
-	else if(energy < en_div){
-		int pos = (position.GetX())*map.getDemen() + (position.GetY());
-		if( map.getSub(pos)->getKeep()>0 && 
-			map.getSub(pos)->getKeep() == 
-			map.getSub(pos)->getHeigh())
+    if(energy < en_div){
+		if(map.getSub((int)(position.GetX())*map.getDemen() + (int)(position.GetY()))->getKeep()>0 && 
+			map.getSub((int)(position.GetX())*map.getDemen() + (int)(position.GetY()))->getKeep() == 
+			map.getSub((int)(position.GetX())*map.getDemen() + (int)(position.GetY()))->getHeigh())
 				targ = eat;
 		else{
-			int x = direction.GetX();
-			int y = direction.GetY();
-			if(map.getSub(pos + x *map.getDemen() + y)->getKeep()== 
-				map.getSub(pos + x *map.getDemen() + y)->getHeigh() 
-				&& map.getSub(pos + x *map.getDemen() + y)->getKeep() >EPS ){
+			int pos = (int)(position.GetX())*map.getDemen() + (int)(position.GetY());
+			int x = (int)direction.GetX();
+			int y = (int)direction.GetY();
+			if(map.getSub(pos + x *map.getDemen() + y)->getKeep()>0){
 				targ = motion;
 			}
-			else if(map.getSub(pos - y *map.getDemen() + x)->getKeep()== 
-			map.getSub(pos - y *map.getDemen() + x)->getHeigh()
-			&&map.getSub(pos - y *map.getDemen() + x)->getKeep() > EPS){// left side
+			else if(map.getSub(pos - y *map.getDemen() + x)->getKeep()>0){// left side
 				targ = motion;
-				direction = iVector(-y, x);
+				direction = Vector(-y, x);
 			}
-			else if(map.getSub(pos + y *map.getDemen() - x)->getKeep()== 
-			map.getSub(pos + y *map.getDemen() - x)->getHeigh()
-			&& map.getSub(pos + y *map.getDemen() - x)->getKeep() > EPS){// right side
+			else if(map.getSub(pos + y *map.getDemen() - x)->getKeep()>0){// right side
 				targ = motion;
-				direction = iVector(y, -x);
+				direction = Vector(y, -x);
 			}
-			else if(map.getSub(pos - x *map.getDemen() - y)->getKeep()== 
-			map.getSub(pos - x *map.getDemen() - y)->getHeigh()
-			&& map.getSub(pos - x *map.getDemen() - y)->getKeep()> EPS){// back side
+			else if(map.getSub(pos - x *map.getDemen() - y)->getKeep()>0){// back side
 				targ = motion;
-				direction = iVector(-x, -y);
+				direction = Vector(-x, -y);
 			}
 			else
-				targ = motion; // find or not  bug should to go through
+				targ = motion; // find or not  bug go through
 		}
 	}
-	else if(energy >= en_div)
+	else
 		targ = reprod;
 }
 
-void Animal::move(Map& map){ // т.к. считаем dt в ms
+void Animal::move(double dt, Map& map){ // т.к. считаем dt в ms
     energy -= kinetic_energy + for_live; // PAR_CHANGE param[7] на энергию
-	map.getSub((position.GetX())*map.getDemen() + (position.GetY()))->eraseBug();
+	map.getSub((int)(position.GetX())*map.getDemen() + (int)(position.GetY()))->eraseBug();
 	position = position + direction;
-	map.getSub((position.GetX())*map.getDemen() + (position.GetY()))->addBug();
+	map.getSub((int)(position.GetX())*map.getDemen() + (int)(position.GetY()))->addBug();
 
 	targ = Null;
 }
-void Animal::eating(Map& map){
+void Animal::eating(double dt,Map& map){
 	Substratum* sub = map.getSub((int)(position.GetX())*map.getDemen() + (int)(position.GetY()));
-	Particle part = map.getPoint((int)(position.GetX())*map.getDemen() + (int)(position.GetY()));
-	if(sub->getKeep() >0){ //== sub->getHeigh()){
-		energy += sub->decay(part.getHeigh()/sub->getNumBug()) - for_live;
-		//if(Stock/sub->getNumBug() <1)
-			//sub->decay(1);
+	if(sub->getKeep() > 0){
+		energy += sub->decay(Stock/sub->getNumBug()) - for_live;
+		sub->decay(sub->getKeep());
 	}
-
-	/*if(sub->getKeep() > 0)
-	{
-		targ = Null;
-	}*/
 
 	targ  = Null;
 }
 void Animal::devide(Map& map, deque <Animal>& anim){
 	targ = Null;
 	if(energy >= en_div){
-		energy -= 2.0* for_live;
+		energy -= 2* for_live;
 		this->devEnergy();
-		iVector di = direction;
-		direction = iVector(-direction.GetY(), direction.GetX());
+		Vector di = direction;
+		direction = Vector(-direction.GetY(), direction.GetX());
 		anim.push_back(*this);
 		direction = di;
 		anim.at(anim.size()-1).new_maj(anim, map);
-		map.getSub((position.GetX())*map.getDemen() + (position.GetY()))->addBug();
+		map.getSub((int)(position.GetX())*map.getDemen() + (int)(position.GetY()))->addBug();
 	}
 }
-bool Animal::live(Map& map,deque <Animal>& anim){
-    //age+= dt;
+bool Animal::live(Map& map,deque <Animal>& anim, double dt, double absdt, int n){
+    age+= dt;
 	bool death = false;
+	double residue_dt = dt;
 	if(targ == eat)
-	    eating(map);
+	    eating(residue_dt,map);
 	else if(targ == reprod)
 	    devide(map, anim);
 	else if(targ == motion)
-		move(map);
-	else{
+		move(dt, map);
+	if(energy<0)
 		death = true;
-	}
 	//if(targ == Null)
 		//new_maj(anim, map);
 	return death; // смерть от голода - 1, от старости - 2.

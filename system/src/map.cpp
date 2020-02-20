@@ -202,10 +202,10 @@ void Substratum::drowSub(){
 	if(fo == solute){
 		if(keep<EPS)
 			glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,blue);
-		else //if(fabs(keep - Stock)<EPS )
+		else if(keep== Stock )
 			glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,yellow);
-		//else
-			//glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,grey);
+		else
+			glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,grey);
 	}
 	if(fo == meat){
 		glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,red);
@@ -244,7 +244,6 @@ void Substratum::drowSub(){
 float Substratum::decay(float vol){
     float cop = vol<keep ? vol : keep;
     keep -= cop;
-
 	//keep+= 1.0<=cop ? 1.0 : cop; 
     return cop;
 }
@@ -361,8 +360,8 @@ void Map::genMap(int N, double vol, float p, const char* file)// ошибка в переда
 	po.clear();
 	num_point = 0;
 	demension = N;
-	//float x = rand();
-	//float y = rand();
+	float x = rand();
+	float y = rand();
 	float h = 0;
 	Point poin = Point();
 	FILE * F;
@@ -401,100 +400,6 @@ void Map::genMap(int N, double vol, float p, const char* file)// ошибка в переда
 			}
 			fputc(10,F);
 		}
-		fclose(F);
-	}
-}
-void Map::genMapTEST(int k, double vol, float p, const char* file)// ошибка в передаче ссылки
-{
-	po.clear();
-	num_point = 0;
-	demension = k+5; // all dementions k-1
-	//float x = rand();
-	//float y = rand();
-	float h = 6.*k+5.;//3./(float)k+3.*k+5.;
-	//Stock = h;
-	Point poin = Point();
-	FILE * F;
-	F= fopen(file,"w");
-	if(F==NULL) 
-	{
-		cout <<"ERROR file map";
-	}
-	else
-	{
-		poin = Point(vol,ground,0,Vector(0,0));
-		poin.writePoint_vol(F);
-		fputc(10,F);
-		for(int i = 0;i<demension;i++)
-		{
-			if(i<3||i>k+1){
-				for(int e = 0;e<demension;e++)
-				{
-					poin = Point(vol,sand,0,Vector(i,e));
-
-					poin.writePoint_whisout_vol(F);
-					po.push_back(poin);
-					substratum.push_back(Substratum(vol,solute,0,Vector(i,e),true,0,0.001));
-					num_point++;
-				}
-			}
-			else{
-				poin = Point(vol,sand,0,Vector(i,0));
-
-				poin.writePoint_whisout_vol(F);
-				po.push_back(poin);
-				substratum.push_back(Substratum(vol,solute,0,Vector(i,0),true,0,0.001));
-				num_point++;
-
-				poin = Point(vol,sand,0,Vector(i,1));
-
-				poin.writePoint_whisout_vol(F);
-				po.push_back(poin);
-				substratum.push_back(Substratum(vol,solute,0,Vector(i,1),true,0,0.001));
-				num_point++;
-
-				poin = Point(vol,sand,0,Vector(i,2));
-
-				poin.writePoint_whisout_vol(F);
-				po.push_back(poin);
-				substratum.push_back(Substratum(vol,solute,0,Vector(i,2),true,0,0.001));
-				num_point++;
-				for(int e = 3;e<k+2;e++)
-				{
-					poin = Point(vol,sand,h,Vector(i,e));
-
-					poin.writePoint_whisout_vol(F);
-					po.push_back(poin);
-					substratum.push_back(Substratum(vol,solute,h,Vector(i,e),true,h,0.001));
-					num_point++;
-				}
-				poin = Point(vol,sand,0,Vector(i,k+2));
-
-				poin.writePoint_whisout_vol(F);
-				po.push_back(poin);
-				substratum.push_back(Substratum(vol,solute,0,Vector(i,k+2),true,0,0.001));
-				num_point++;
-
-				poin = Point(vol,sand,0,Vector(i,k+3));
-
-				poin.writePoint_whisout_vol(F);
-				po.push_back(poin);
-				substratum.push_back(Substratum(vol,solute,0,Vector(i,k+3),true,0,0.001));
-				num_point++;
-
-				poin = Point(vol,sand,0,Vector(i,k+4));
-
-				poin.writePoint_whisout_vol(F);
-				po.push_back(poin);
-				substratum.push_back(Substratum(vol,solute,0,Vector(i,k+4),true,0,0.001));
-				num_point++;
-
-				fputc(10,F);
-			}
-		}
-
-
-
 		fclose(F);
 	}
 }
