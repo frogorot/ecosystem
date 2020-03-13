@@ -2,6 +2,7 @@
 #include<string>
 #include<vector>
 #include<deque>
+#include<list>
 #include"stdio.h"
 
 #include"../glut/glut.h"
@@ -18,6 +19,11 @@ Map* map1 = NULL;
 deque <Animal> animal;
 deque <int> hand_eat;
 deque <int> hand_other;
+int scale_bug = 10;
+int demention_of_cell = 16;
+int MAX_scale_bug = demention_of_cell*3;
+int MAX_demention_of_cell = 15;
+
 
 /*vector <Animal> species;
 vector <int> population;
@@ -35,9 +41,9 @@ vector <int> hunger;*/
 
 FILE* F_popul = NULL;
 FILE* F_spec = NULL;
-FILE* F_gend = NULL;
-FILE* F_age = NULL;
-FILE* F_death = NULL;
+//FILE* F_gend = NULL;
+//FILE* F_age = NULL;
+//FILE* F_death = NULL;
 
 int dt = clock()/(CLOCKS_PER_SEC*0.001);
 int olddt = clock()/(CLOCKS_PER_SEC*0.001);
@@ -50,12 +56,16 @@ float total_calcdt = 0;
 
 int FPS; 
 
-Vector pos_map = Vector(-201,-201);//-49,-51);
-double scale_map = 0.098;//0.659;//0.179; //0.37;
+Vector pos_map = Vector(-301,-301);//-201,-201);//-6.668,-7.009);//-201,-201);//-49,-51);
+double scale_map = 0.06108;//0.308 // 0.548; // <- TEST //0.098;//0.659;//0.179; //0.37;
 bool stop = true;
 bool Dragflag = false;
 int oldx=0;
 int oldy=0;
+
+Animal Bug1(int x, int y, int d);
+Animal Bug2(int x, int y, int k);
+Animal Bug3TEST(int x, int y, int k);
 
 void display()
 {
@@ -128,20 +138,99 @@ void idle()
 		//cout << "FPS. " << FPS << "\n";
 		FPS = 0;
 		olddt = dt;
+		unsigned int size = hand_eat.size() + hand_other.size();
+
+		if (size == 0) {
+			fopen_s(&F_spec, "species.log", "a");
+			fputs((myto_string(scale_bug) + "\t" + myto_string(demention_of_cell) + "dead\n").c_str(), F_spec);
+			fclose(F_spec);
+
+			++scale_bug;
+			if (scale_bug > MAX_scale_bug) {
+				scale_bug = 2;
+				++demention_of_cell;
+				if (demention_of_cell > MAX_demention_of_cell) {
+					stop = true;
+				}
+			}
+			
+
+			hand_eat.clear();
+			hand_other.clear();
+			delete map1;
+			animal.clear();
+
+			map1 = new Map;
+
+			cout << "Hellow! \n";
+			map1->genMapTEST(scale_bug, demention_of_cell, 600, 4, 4, "uniform.txt");
+
+			animal.push_back(Bug3TEST(300, 300, demention_of_cell));
+			animal.back().new_maj(animal, *map1);
+			if (animal.back().targ == eat)
+				hand_eat.push_back(animal.size() - 1);
+			else
+				hand_other.push_back(animal.size() - 1);
+
+			map1->getSub(300 * map1->getDemen() + 300)->addBug();
+		}
+		else {
+			vector <int> check;
+			unsigned int size_of_chek = 0;
+			for (unsigned int i = 0; i < size; i++) {
+				if (i == 0) {
+					check.push_back(i);
+					++size_of_chek;
+				}
+				else {
+					bool finde = false;
+					for (unsigned int j = 0; j < size_of_chek; j++) {
+						if (animal.at(check.at(j)) == animal.at(i)) {
+							finde = true;
+							break;
+						}
+					}
+					if (!finde) {
+						check.push_back(i);
+						++size_of_chek;
+					}
+				}
+			}
+			if (size > 0 && size_of_chek * scale_bug == size) {
+				fopen_s(&F_spec, "species.log", "a");
+				fputs((myto_string(scale_bug) + "\t" + myto_string(demention_of_cell) + "life\n").c_str(), F_spec);
+				fclose(F_spec);
+				++scale_bug;
+				if (scale_bug > MAX_scale_bug) {
+					scale_bug = 2;
+					++demention_of_cell;
+					if (demention_of_cell > MAX_demention_of_cell) {
+						stop = true;
+					}
+				}
+				
+
+
+			}
+			check.clear();
+		}
 	}
 	if(!stop){
-		F_popul = fopen("population.log","a"); 
+		fopen_s(&F_popul, "population.log","a");
 		if((dt - drowdt > 15)){
 			//int tim = dt - drowdt;
 			total_calcdt += calcdt;
 			int siz_eat = hand_eat.size();
+			//list <int>::iterator it = hand_eat.begin();
+			//auto end_eat = hand_eat.end();
 			int siz_oth = hand_other.size();
+			//auto end_oth = hand_other.end();
 			bool die;
-			for(unsigned int i =0; i<siz_eat; i++){
-				die = animal[hand_eat[i]].live(*map1,animal,calcdt, total_calcdt,i);
-				//cout << animal[hand_eat[i]].getEnergy() << "\n";
+			for(int i = 0; i< siz_eat; i++){
+				die = animal[hand_eat[i]].live(*map1,animal);
+				//cout << animal[*it].getEnergy() << "\n";
 				if(die){
-					map1->getSub((int)(animal[hand_eat[i]].position.GetX())*map1->getDemen() + (int)(animal[hand_eat[i]].position.GetY()))->eraseBug();
+					map1->getSub((animal[hand_eat[i]].position.GetX())*map1->getDemen() + (animal[hand_eat[i]].position.GetY()))->eraseBug();
 					animal.erase(animal.begin() + hand_eat[i]);
 
 					int de = hand_eat[i];
@@ -154,8 +243,8 @@ void idle()
 						if(hand_eat[j] > de)
 							--hand_eat[j];
 				}
-				else{
-					if(animal[hand_eat[i]].targ == eat)
+				else {
+					if (animal[hand_eat[i]].targ == eat)
 						hand_eat.push_back(hand_eat[i]);
 					else
 						hand_other.push_back(hand_eat[i]);
@@ -165,14 +254,14 @@ void idle()
 
 			for(unsigned int i =0; i<siz_oth; i++){
 				if(animal[hand_other[i]].targ == reprod){
-					die = animal[hand_other[i]].live(*map1,animal,calcdt, total_calcdt,i);
+					die = animal[hand_other[i]].live(*map1,animal);
 					if(animal.back().targ == eat)
 						hand_eat.push_back(animal.size()-1);
 					else
 						hand_other.push_back(animal.size()-1);
 				}
 				else
-					die = animal[hand_other[i]].live(*map1,animal,calcdt, total_calcdt,i);
+					die = animal[hand_other[i]].live(*map1,animal);
 				
 				//cout << animal[hand_other[i]].getEnergy() << "\n";
 				if(die){
@@ -189,8 +278,8 @@ void idle()
 						if(hand_eat[j] > de)
 							--hand_eat[j];
 				}
-				else{
-					if(animal[hand_other[i]].targ == eat)
+				else {
+					if (animal[hand_other[i]].targ == eat)
 						hand_eat.push_back(hand_other[i]);
 					else
 						hand_other.push_back(hand_other[i]);
@@ -199,15 +288,27 @@ void idle()
 			hand_other.erase(hand_other.begin(), hand_other.begin()+siz_oth);
 			
 			siz_eat = hand_eat.size();
+			siz_oth = hand_other.size();
 			for(unsigned int i =0; i<siz_eat; i++){
 				if(animal[hand_eat[i]].targ == Null)
 					animal[hand_eat[i]].new_maj(animal,*map1);
+
+				if (animal[hand_eat[i]].targ == eat)
+					hand_eat.push_back(hand_eat[i]);
+				else
+					hand_other.push_back(hand_eat[i]);
 			}
-			siz_oth = hand_other.size();
 			for(unsigned int i =0; i<siz_oth; i++){
 				if(animal[hand_other[i]].targ == Null)
 					animal[hand_other[i]].new_maj(animal,*map1);
+
+				if (animal[hand_other[i]].targ == eat)
+					hand_eat.push_back(hand_other[i]);
+				else
+					hand_other.push_back(hand_other[i]);
 			}
+			hand_eat.erase(hand_eat.begin(), hand_eat.begin() + siz_eat);
+			hand_other.erase(hand_other.begin(), hand_other.begin() + siz_oth);
 			//cout << "______" << "\n";
 		}
 		//stop = !stop;
@@ -215,6 +316,7 @@ void idle()
 		fputs(myto_string((int)animal.size()).c_str(), F_popul);
 		fputs("\n",F_popul);
 		fclose(F_popul);
+		//stop = !stop;
 	}
 	drowdt = dt;
 	glutPostRedisplay();
@@ -319,7 +421,9 @@ void reshape(int width, int height)
 	SCENE_H = height;
 }
 
-Animal Bug1(int x, int y, int d);
+//Animal Bug1(int x, int y, int d);
+//Animal Bug2(int x, int y, int k);
+//Animal Bug3TEST(int x, int y, int k);
 
 int main(int argc, char** argv)
 {
@@ -338,28 +442,43 @@ int main(int argc, char** argv)
 	glClearColor(0.95, 0.95, 0.95, 1.0);
 
 
-	F_popul = fopen("population.log","w"); 
-	F_spec = fopen("species.log","w"); 
-	F_gend = fopen("gender.log","w");
-	F_age = fopen("age.log","w");
-	F_death = fopen("death.log","w");
+	/*fopen_s(&F_popul, "population.log", "a");
+	fopen_s(&F_spec, "species.log", "w");*/
+	/*fopen_s(&F_gend, "gender.log", "w");
+	fopen_s(&F_age, "age.log", "w");
+	fopen_s(&F_death, "death.log","w");*/
 
-	if(F_popul == NULL || F_spec == NULL){
+	/*if(F_popul == NULL || F_spec == NULL){
 		cout << "ERROR_FILE_POPUL_||_SPEC\n";
 		system("Pause");
 		return 0;
-	}
+	}*/
+
+	/*int k = 2;
+	cout<< "Write demention of sqare: ";
+	cin >> k;
+	while(k<2){
+		cout<< "Wrong demention, please try again (demention>=2): ";
+		cin >> k;
+	}*/
+
+	stop = !stop;
 
 	map1 = new Map;
 	//string mapf;
 	cout << "Hellow! \n";
 	/*cin  >> mapf;
 	cout << mapf << endl;*/ //map1->genMap(100,4,0.4, "test11.txt");
-	map1->genMap(400,4,4, "uniform.txt"); // "test.txt"->mapf
-	//map1->readMap("test11.txt"); // "test.txt"
+
+	//map1->genMap(400,4,4, "uniform.txt"); // "test.txt"->mapf
+	//map1->genMapTEST(k,k+5, 4,4, "uniform.txt");
+	map1->genMapTEST(scale_bug,demention_of_cell,600, 4,4, "uniform.txt");
+	//map1->readMap("uniform.txt"); // "test11.txt" // "test.txt"
+
 	int demen = map1->getDemen();
 	//for(int i =0;i<4;i++){
-		animal.push_back(Bug1(200,200,0));//Vector(chance(demen-1), chance(demen-1))
+		//animal.push_back(Bug2(200,200,8));//Vector(chance(demen-1), chance(demen-1))
+		animal.push_back(Bug3TEST(300,300,demention_of_cell));
 		animal.back().new_maj(animal, *map1);
 		if(animal.back().targ == eat)
 			hand_eat.push_back(animal.size()-1);
@@ -368,7 +487,7 @@ int main(int argc, char** argv)
 		//animal.push_back(Bug1(25,23,1));
 		//animal.push_back(Bug1(23,25,3));
 		//animal.push_back(Bug1(25,25,2));
-		map1->getSub(200*demen + 200)->addBug();
+		map1->getSub(300*demen + 300)->addBug();
 		//map1->getSub(25*map1->getDemen() + 23)->addBug();
 		//map1->getSub(23*map1->getDemen() + 25)->addBug();
 		//map1->getSub(25*map1->getDemen() + 25)->addBug();
@@ -378,30 +497,30 @@ int main(int argc, char** argv)
 	
 	delete map1;
 	animal.clear();
-	fclose(F_popul);
-	fclose(F_spec);
-	fclose(F_gend);
-	fclose(F_age);
-	fclose(F_death);
+	//fclose(F_popul);
+	//fclose(F_spec);
+	//fclose(F_gend);
+	//fclose(F_age);
+	//fclose(F_death);
 
 	return 0;
 }
 
 Animal Bug1(int x, int y, int d){
 	GLfloat color[3] = {2.55, 1.60, 0.51};
-	Vector dir;
+	iVector dir;
 	switch(d%4){
 	case 0:
-		dir = Vector(0,1);
+		dir = iVector(0,1);
 		break;
 	case 1:
-		dir = Vector(-1,0);
+		dir = iVector(-1,0);
 		break;
 	case 2:
-		dir = Vector(0,-1);
+		dir = iVector(0,-1);
 		break;
 	case 3:
-		dir = Vector(1,0);
+		dir = iVector(1,0);
 		break;
 	}
 	/*double en, ki, for_li, di; 
@@ -413,11 +532,7 @@ Animal Bug1(int x, int y, int d){
 	cin >> for_li;
 	cout << "Write diverge limit: ";
 	cin >> di;*/
-	return Animal(0, 0.6, 0.5, 10, color, Vector(x, y), dir); //4 не работает, так как живём в целых числах
-		//Animal(0,1,2,10, color, Vector(x, y), dir); //6  стабильная линейная функция, съедают за собой НЕ всё
-		//Animal(0,3,1,9, color, Vector(x, y), dir); //7  стабильная линейная функция, съедают за собой всё
-		//Animal(0,0,1,6, color, Vector(x, y), dir); //3
-		
+	return Animal(0,0,1,6, color, iVector(x, y), dir); //3
 
 		//Ниже находятся примеры для вещественных значений параметров.
 		//Animal(3.0,3.0,1.0,8.0, color, Vector(x, y), dir); //14
@@ -446,3 +561,26 @@ Animal Bug1(int x, int y, int d){
 	//Animal(1.0, 2.0, 1.0, 4.0, color, Vector(x, y), dir);
 }// energy->kinetic->for_live->div
 
+Animal Bug2(int x, int y, int k){
+	GLfloat color[3] = {2.55, 1.60, 0.51};
+	iVector dir;
+
+	dir = iVector(0,1);
+	/*E,V,L,D*/
+	double V = 3.0*k;
+	double L = 1.0;
+	double D = 6.0*k-3.0/k+2;
+	return Animal(0,V,L,D, color, iVector(x, y), dir); 
+}// energy->kinetic->for_live->div
+
+Animal Bug3TEST(int x, int y, int k){
+	GLfloat color[3] = {2.55, 1.60, 0.51};
+	iVector dir;
+
+	dir = iVector(0,1);
+	/*E,V,L,D*/
+	double V = 6.0*k-3.0;
+	double L = 1.0;
+	double D = 12.0*k-7.5;//12.0*k-7.0;
+	return Animal(0/*6.0*(k-1)*//*3.0*k-3.0/k*/,V,L,D, color, iVector(x, y), dir); 
+}// energy->kinetic->for_live->div

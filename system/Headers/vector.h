@@ -40,4 +40,41 @@ public:
 	bool operator!=(Vector& const right) const;
 };
 Vector Vector_norm(Vector& value);
+class iVector
+{
+private:
+	int x;
+	int y;
+public:
+	iVector();
+	iVector(int,int);
+	iVector(const iVector&);
+	~iVector();
+	void SetX(double x1){x = x1;}
+	void SetY(double y1){y = y1;}
+	double GetX() const {return x;}
+	double GetY() const {return y;}
+
+	//double length() const;
+	double length2() const;
+
+	iVector operator+(iVector& const right) const;
+	void operator+=(iVector& const right);
+	iVector operator-(iVector& const right) const;
+	iVector operator-() const;
+	iVector operator*(int scale) const;
+	//iVector operator/(int u) const;
+	//iVector operator/(iVector& const right) const;
+	
+	double operator&(iVector& const right) const;
+	//double operator^(iVector& const right) const;
+	iVector operator>(iVector& const right) const;
+	iVector& operator=(const iVector& val);
+
+	bool operator<(int value) const;
+	bool operator==(iVector& const right) const;
+	bool operator==(const iVector& right) const;
+	bool operator!=(iVector& const right) const;
+};
+
 #endif;

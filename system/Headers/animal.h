@@ -35,46 +35,48 @@ enum target
 	Null = 1,
 	eat,
 	motion,
-	reprod // размножение
+	reprod, // размножение
+	death
 };
 using namespace std;
 class Animal
 {
 private:
-	int energy;
-	int kinetic_energy;
-	int for_live;
-	int en_div;
+	double energy;
+	double kinetic_energy;
+	double for_live;
+	double en_div;
 
 	double prev_dt;
 public:
 	// !@#$  convert to privat
 	GLfloat an_color[3];
 	
-	double age;
-	Vector position;
-	Vector direction; // текущее направление движения (сейчас, норма finish)
+	//double age;
+	iVector position;
+	iVector direction; // текущее направление движения (сейчас, норма finish)
 
 	target targ;   // нынешняя цель
 	
 	Animal();
-	Animal(double en, double ki_en, double for_li, double en_d, GLfloat color[3], Vector pos, Vector dir);
+	Animal(double en, double ki_en, double for_li, double en_d, GLfloat color[3], iVector pos, iVector dir);
 	Animal(const Animal& anim);
 	Animal& operator= (const Animal& val); // fix
 
-	const double getDt() const {return prev_dt; }
+	bool operator== (const Animal& val) const;
+	//const double getDt() const {return prev_dt; }
 	const double getEnergy() const {return energy; }
 	const double getKinEn() const {return kinetic_energy; }
 	const double getForLive() const {return for_live; }
 	const double getEnDiv() const { return en_div; }
 	void drowAnimal(Vector centre);
-	inline void devEnergy() { energy *= 0.5; }
+	inline void devEnergy() { energy /= 2.0; }
 	void devide(Map& , deque <Animal>& );
 
 	void new_maj(deque <Animal>&, const Map& map); // додел
-	void move(double dt, Map&); // определить
-	void eating(double dt, Map&); // определить
-	bool live(Map&, deque <Animal>&, double dt, double absdt, int n);
+	void move(Map&); // определить
+	void eating(Map&); // определить
+	bool live(Map&, deque <Animal>&);
 };
 #endif;
 
